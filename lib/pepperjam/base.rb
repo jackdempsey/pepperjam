@@ -1,7 +1,7 @@
 module Pepperjam
   class Base
     include HTTParty
-    format :xml
+    format :json
 
     @@credentials = {}
     @@default_params = {}
@@ -24,7 +24,7 @@ module Pepperjam
     end
 
     def self.base_url
-      "https://webservices.pepperjamnetwork.com/"
+      "http://api.pepperjamnetwork.com/"
     end
 
     def self.validate_params!(provided_params, available_params, default_params = {})
@@ -33,27 +33,21 @@ module Pepperjam
       raise ArgumentError.new("Invalid parameters: #{invalid_params.join(', ')}") if invalid_params.length > 0
     end
 
-    def self.get_service(path, query, headers)
+    def self.get_service(path, query)
       query.keys.each{|k| query[k.to_s] = query.delete(k)}
-      query.merge!({'target' => 'reports.sid', 'format' => 'csv', 'username' => credentials['username'], 'password' => credentials['password']})
 
       results = []
-
       begin
+        # pairs = [] ; query.each_pair{|k,v| pairs << "#{k}=#{v}" } ; p "#{path}&#{pairs.join('&')}"
         response = get(path, :query => query, :timeout => 30)
       rescue Timeout::Error
         nil
       end
 
-      unless validate_response(response) or response.response.body.blank?
-        str = response.response.body
-        str = headers + "\n" + str
+      validate_response(response)
 
-        results = CSV.parse(str, {:col_sep => ",", :row_sep => "\n", :headers => true})
-      end
-
-      results.map{|r| self.new(r.to_hash)}
-    end # get
+      JSON.parse(response.body)
+    end
 
     def self.credentials
       unless @@credentials && @@credentials.length > 0
@@ -70,7 +64,7 @@ module Pepperjam
     end # credentails
 
     def self.validate_response(response)
-      raise ArgumentError, "There was an error connecting to PepperJam's reporting server." if response.response.body.include?("error")
+      raise ArgumentError, "There was an error connecting to PepperJam's reporting server: #{response.response.body.inspect}." if response.response.body.include?("error")
     end
 
     def self.first(params)
