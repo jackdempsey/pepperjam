@@ -13,5 +13,14 @@ module Pepperjam
       end
 
     end # << self
+
+    def link_id
+      id
+    end
+
+    def advertiser_id
+      program_id
+    end
+
   end # class
 end # module
