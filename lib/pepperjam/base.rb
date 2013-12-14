@@ -39,7 +39,7 @@ module Pepperjam
       results = []
       begin
         # pairs = [] ; query.each_pair{|k,v| pairs << "#{k}=#{v}" } ; p "#{path}&#{pairs.join('&')}"
-        response = get(path, :query => query, :timeout => 30)
+        response = get(path, :query => query, :timeout => 120)
       rescue Timeout::Error
         nil
       end
